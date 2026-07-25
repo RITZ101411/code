@@ -24,5 +24,9 @@ prefix: content
 ### Examples
 
 ```
-
+feat: add collapse animation to file tree
+fix: retry LSP connection on unexpected disconnect
+refactor: extract shared error handling for IPC
+docs: add supported languages list to SPECIFICATION.ja.md
+chore: upgrade Tauri to v2.1
 ```
