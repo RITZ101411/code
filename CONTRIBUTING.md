@@ -1,11 +1,11 @@
 # Contributing
 
-## Pull Requests
+## Branches and Pull Requests
 
-- Branch from `main`
+- Small, focused changes may be committed directly to `main`
+- For larger changes or changes that need review, branch from `main`
 - Branch name: `feat/description`, `fix/description`, `docs/description`, etc.
 - Keep PRs focused — one feature or fix per PR
-- Direct pushes to `main` are blocked; all changes go through PRs
 
 ## Commit Messages
 
