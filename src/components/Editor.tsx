@@ -21,7 +21,7 @@ export function Editor({ content = "", onChange }: EditorProps) {
     const state = EditorState.create({
       doc: content,
       extensions: [
-        lineNumbers({ formatNumber: (n, state) => {
+        lineNumbers({ formatNumber: (n: number, state: EditorState) => {
           const maxLines = state.doc.lines;
           const digits = Math.max(4, String(maxLines).length);
           return String(n).padStart(digits, "\u2007");
