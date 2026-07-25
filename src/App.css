@@ -8,3 +8,10 @@
   --color-text-primary: #ffffff;
   --color-text-muted: #a6adc8;
 }
+
+html,
+body {
+  user-select: none;
+  -webkit-user-select: none;
+  overflow: hidden;
+}
