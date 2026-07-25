@@ -1,5 +1,6 @@
 import "./App.css";
 import { Titlebar } from "./components/Titlebar";
+import { Editor } from "./components/Editor";
 
 function App() {
   return (
@@ -9,8 +10,8 @@ function App() {
         <aside className="w-60 min-w-50 bg-bg-sidebar border-r border-border p-3 overflow-y-auto">
           <p className="text-sm text-text-muted">File Tree</p>
         </aside>
-        <section className="flex-1 p-3 overflow-hidden">
-          <p className="text-sm text-text-muted">Editor</p>
+        <section className="flex-1 overflow-hidden">
+          <Editor content="// Hello from CodeEditorTauri\n" />
         </section>
       </main>
     </div>
