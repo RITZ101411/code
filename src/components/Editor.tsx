@@ -9,9 +9,10 @@ import { searchKeymap, highlightSelectionMatches } from "@codemirror/search";
 interface EditorProps {
   content?: string;
   onChange?: (content: string) => void;
+  isActive?: boolean;
 }
 
-export function Editor({ content = "", onChange }: EditorProps) {
+export function Editor({ content = "", onChange, isActive = true }: EditorProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const viewRef = useRef<EditorView | null>(null);
 
@@ -52,6 +53,7 @@ export function Editor({ content = "", onChange }: EditorProps) {
           },
           ".cm-scroller": {
             overflow: "auto",
+            overscrollBehavior: "none",
           },
           "& .cm-gutters .cm-lineNumbers .cm-gutterElement": {
             textAlign: "right",
@@ -73,7 +75,6 @@ export function Editor({ content = "", onChange }: EditorProps) {
     };
   }, []);
 
-  // Update content when prop changes externally
   useEffect(() => {
     const view = viewRef.current;
     if (!view) return;
@@ -89,6 +90,17 @@ export function Editor({ content = "", onChange }: EditorProps) {
       });
     }
   }, [content]);
+
+  useEffect(() => {
+    if (!isActive) return;
+
+    const animationFrame = requestAnimationFrame(() => {
+      viewRef.current?.requestMeasure();
+      viewRef.current?.focus();
+    });
+
+    return () => cancelAnimationFrame(animationFrame);
+  }, [isActive]);
 
   return (
     <div

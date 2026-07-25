@@ -1,39 +1,120 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import "./App.css";
 import { Titlebar } from "./components/Titlebar";
 import { Editor } from "./components/Editor";
+import { EditorTabs } from "./components/EditorTabs";
 import { FileTree } from "./components/FileTree";
 
+interface OpenFile {
+  path: string;
+  name: string;
+  content: string;
+  savedContent: string;
+}
+
+function getFileName(path: string) {
+  return path.split(/[/\\]/).pop() || path;
+}
+
 function App() {
-  const [content, setContent] = useState("");
-  const [currentFile, setCurrentFile] = useState<string | null>(null);
+  const [openFiles, setOpenFiles] = useState<OpenFile[]>([]);
+  const [activePath, setActivePath] = useState<string | null>(null);
+  const latestOpenRequest = useRef(0);
   const [rootPath] = useState(() => {
-    // Default to home directory or current project
     return "/Users/ritz/Projects/CodeEditorTauri";
   });
 
   async function handleFileSelect(path: string) {
+    const requestId = ++latestOpenRequest.current;
+    const openFile = openFiles.find((file) => file.path === path);
+
+    if (openFile) {
+      setActivePath(path);
+      return;
+    }
+
     try {
       const fileContent = await invoke<string>("read_file", { path });
-      setContent(fileContent);
-      setCurrentFile(path);
+      setOpenFiles((files) => {
+        if (files.some((file) => file.path === path)) {
+          return files;
+        }
+
+        return [
+          ...files,
+          {
+            path,
+            name: getFileName(path),
+            content: fileContent,
+            savedContent: fileContent,
+          },
+        ];
+      });
+
+      setActivePath((currentPath) =>
+        requestId === latestOpenRequest.current || currentPath === null
+          ? path
+          : currentPath,
+      );
     } catch (e) {
       console.error("Failed to open file:", e);
     }
   }
 
   async function handleSave() {
-    if (!currentFile) return;
+    const file = openFiles.find((openFile) => openFile.path === activePath);
+    if (!file) return;
+
+    const contentToSave = file.content;
+
     try {
-      await invoke("write_file", { path: currentFile, content });
+      await invoke("write_file", {
+        path: file.path,
+        content: contentToSave,
+      });
+      setOpenFiles((files) =>
+        files.map((openFile) =>
+          openFile.path === file.path
+            ? { ...openFile, savedContent: contentToSave }
+            : openFile,
+        ),
+      );
     } catch (e) {
       console.error("Failed to save file:", e);
     }
   }
 
-  function handleChange(newContent: string) {
-    setContent(newContent);
+  function handleChange(path: string, content: string) {
+    setOpenFiles((files) =>
+      files.map((file) =>
+        file.path === path ? { ...file, content } : file,
+      ),
+    );
+  }
+
+  function handleClose(path: string) {
+    const closingIndex = openFiles.findIndex((file) => file.path === path);
+    if (closingIndex === -1) return;
+
+    const file = openFiles[closingIndex];
+    const isDirty = file.content !== file.savedContent;
+
+    if (
+      isDirty &&
+      !window.confirm(`${file.name}の未保存の変更を破棄しますか？`)
+    ) {
+      return;
+    }
+
+    const remainingFiles = openFiles.filter((openFile) => openFile.path !== path);
+    setOpenFiles(remainingFiles);
+
+    if (activePath === path) {
+      const nextFile =
+        remainingFiles[closingIndex] ?? remainingFiles[closingIndex - 1];
+      setActivePath(nextFile?.path ?? null);
+    }
   }
 
   return (
@@ -44,15 +125,57 @@ function App() {
           e.preventDefault();
           handleSave();
         }
+        if (
+          (e.metaKey || e.ctrlKey) &&
+          e.key === "w" &&
+          activePath !== null
+        ) {
+          e.preventDefault();
+          handleClose(activePath);
+        }
       }}
     >
-      <Titlebar />
+      <Titlebar>
+        <EditorTabs
+          tabs={openFiles.map((file) => ({
+            path: file.path,
+            name: file.name,
+            isDirty: file.content !== file.savedContent,
+          }))}
+          activePath={activePath}
+          onSelect={setActivePath}
+          onClose={handleClose}
+        />
+      </Titlebar>
       <main className="flex flex-1 overflow-hidden">
-        <aside className="w-60 min-w-50 bg-bg-sidebar border-r border-border p-2 overflow-y-auto">
+        <aside className="w-60 min-w-50 shrink-0 bg-bg-sidebar border-r border-border p-2 overflow-y-auto overscroll-none">
           <FileTree rootPath={rootPath} onFileSelect={handleFileSelect} />
         </aside>
-        <section className="flex-1 overflow-hidden">
-          <Editor content={content} onChange={handleChange} />
+        <section className="flex min-w-0 flex-1 flex-col overflow-hidden">
+          <div className="min-h-0 flex-1 overflow-hidden">
+            {openFiles.length === 0 ? (
+              <div className="grid h-full place-items-center text-sm text-text-muted">
+                ファイルツリーからファイルを開いてください
+              </div>
+            ) : (
+              openFiles.map((file) => {
+                const isActive = file.path === activePath;
+
+                return (
+                  <div
+                    key={file.path}
+                    className={isActive ? "h-full" : "hidden"}
+                  >
+                    <Editor
+                      content={file.content}
+                      isActive={isActive}
+                      onChange={(content) => handleChange(file.path, content)}
+                    />
+                  </div>
+                );
+              })
+            )}
+          </div>
         </section>
       </main>
     </div>

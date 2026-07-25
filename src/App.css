@@ -10,8 +10,35 @@
 }
 
 html,
+body,
+#root {
+  overscroll-behavior: none;
+}
+
 body {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+
+  margin: 0;
+  overflow: hidden;
+
   user-select: none;
   -webkit-user-select: none;
+}
+
+#root {
+  position: fixed;
+  inset: 0;
   overflow: hidden;
+}
+
+.tab-strip {
+  scrollbar-width: none;
+}
+
+.tab-strip::-webkit-scrollbar {
+  display: none;
 }

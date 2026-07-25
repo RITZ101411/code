@@ -2,6 +2,9 @@ use std::fs;
 use tauri::Manager;
 use tauri_plugin_decorum::WebviewWindowExt;
 
+#[cfg(target_os = "macos")]
+const NS_SCROLL_ELASTICITY_NONE: isize = 1;
+
 #[tauri::command]
 fn read_file(path: String) -> Result<String, String> {
     fs::read_to_string(&path).map_err(|e| format!("Failed to read {}: {}", path, e))
@@ -45,17 +48,52 @@ struct DirEntry {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    tauri::Builder::default()
-        .plugin(tauri_plugin_opener::init())
-        .plugin(tauri_plugin_decorum::init())
+    let builder = tauri::Builder::default().plugin(tauri_plugin_opener::init());
+
+    #[cfg(not(target_os = "macos"))]
+    let builder = builder.plugin(tauri_plugin_decorum::init());
+
+    builder
         .invoke_handler(tauri::generate_handler![read_file, write_file, read_dir])
         .setup(|app| {
             let main_window = app.get_webview_window("main").unwrap();
+
+            #[cfg(not(target_os = "macos"))]
             main_window.create_overlay_titlebar().unwrap();
 
             #[cfg(target_os = "macos")]
             {
                 main_window.set_traffic_lights_inset(12.0, 10.0).unwrap();
+
+                let traffic_light_window = main_window.clone();
+                main_window.on_window_event(move |event| {
+                    if matches!(
+                        event,
+                        tauri::WindowEvent::Resized(_)
+                            | tauri::WindowEvent::ScaleFactorChanged { .. }
+                    ) {
+                        let _ = traffic_light_window.set_traffic_lights_inset(12.0, 10.0);
+                    }
+                });
+
+                main_window
+                    .with_webview(|webview| unsafe {
+                        let wk_webview: *mut objc2::runtime::AnyObject = webview.inner().cast();
+                        let scroll_view: *mut objc2::runtime::AnyObject =
+                            objc2::msg_send![wk_webview, enclosingScrollView];
+
+                        if !scroll_view.is_null() {
+                            let _: () = objc2::msg_send![
+                                scroll_view,
+                                setVerticalScrollElasticity: NS_SCROLL_ELASTICITY_NONE
+                            ];
+                            let _: () = objc2::msg_send![
+                                scroll_view,
+                                setHorizontalScrollElasticity: NS_SCROLL_ELASTICITY_NONE
+                            ];
+                        }
+                    })
+                    .unwrap();
             }
 
             Ok(())
