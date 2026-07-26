@@ -9,6 +9,9 @@
 
 ## Commit Messages
 
+- Commit each completed feature or fix separately
+- Keep commits focused on a single change
+
 ```
 prefix: content
 ```
