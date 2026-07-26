@@ -22,7 +22,7 @@ export function EditorTabs({
       className="tab-strip flex h-full overflow-x-auto overscroll-none bg-bg-sidebar"
       role="tablist"
       aria-label="開いているファイル"
-      data-tauri-drag-region="false"
+      data-tauri-drag-region
     >
       {tabs.map((tab) => {
         const isActive = tab.path === activePath;

@@ -20,7 +20,7 @@ export function Titlebar({ children }: TitlebarProps) {
       </div>
       <div
         className="h-full min-w-0 flex-1"
-        data-tauri-drag-region="false"
+        data-tauri-drag-region
       >
         {children}
       </div>
