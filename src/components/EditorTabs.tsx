@@ -183,7 +183,7 @@ export function EditorTabs({
           <Fragment key={tab.path}>
             {isDragging && (
               <div
-                className="min-w-32 max-w-56 shrink-0 border-r border-border"
+                className="shrink-0 border-r border-border"
                 style={{ width: drag?.width, height: drag?.height }}
                 aria-hidden
               />
@@ -191,7 +191,7 @@ export function EditorTabs({
             <div
               data-tab-path={tab.path}
               className={[
-                "group relative flex min-w-32 max-w-56 shrink-0 cursor-grab items-center border-r border-border active:cursor-grabbing",
+                "group relative flex min-w-20 max-w-56 flex-1 basis-40 cursor-grab items-center border-r border-border active:cursor-grabbing",
                 isActive
                   ? "bg-bg-primary text-text-primary"
                   : "bg-bg-sidebar text-text-muted hover:bg-bg-hover",
