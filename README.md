@@ -1,4 +1,4 @@
-# CodeEditorTauri
+# code
 
 Lightweight code editor built with Tauri v2 + CodeMirror 6.
 
