@@ -4,6 +4,10 @@ use tauri_plugin_decorum::WebviewWindowExt;
 
 #[cfg(target_os = "macos")]
 const NS_SCROLL_ELASTICITY_NONE: isize = 1;
+#[cfg(target_os = "macos")]
+const TRAFFIC_LIGHT_X: f32 = 12.0;
+#[cfg(target_os = "macos")]
+const TRAFFIC_LIGHT_Y: f32 = 14.0;
 
 #[tauri::command]
 fn read_file(path: String) -> Result<String, String> {
@@ -63,7 +67,9 @@ pub fn run() {
 
             #[cfg(target_os = "macos")]
             {
-                main_window.set_traffic_lights_inset(12.0, 10.0).unwrap();
+                main_window
+                    .set_traffic_lights_inset(TRAFFIC_LIGHT_X, TRAFFIC_LIGHT_Y)
+                    .unwrap();
 
                 let traffic_light_window = main_window.clone();
                 main_window.on_window_event(move |event| {
@@ -72,7 +78,8 @@ pub fn run() {
                         tauri::WindowEvent::Resized(_)
                             | tauri::WindowEvent::ScaleFactorChanged { .. }
                     ) {
-                        let _ = traffic_light_window.set_traffic_lights_inset(12.0, 10.0);
+                        let _ = traffic_light_window
+                            .set_traffic_lights_inset(TRAFFIC_LIGHT_X, TRAFFIC_LIGHT_Y);
                     }
                 });
 
