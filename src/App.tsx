@@ -161,6 +161,7 @@ function App() {
   return (
     <div
       className="flex flex-col h-screen bg-bg-primary text-text-primary font-sans"
+      onContextMenu={(event) => event.preventDefault()}
       onKeyDown={(e) => {
         if ((e.metaKey || e.ctrlKey) && e.key === "s") {
           e.preventDefault();
