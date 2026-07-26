@@ -3,7 +3,10 @@ import { invoke } from "@tauri-apps/api/core";
 import "./App.css";
 import { Titlebar } from "./components/Titlebar";
 import { Editor } from "./components/Editor";
-import { EditorTabs } from "./components/EditorTabs";
+import {
+  EditorTabs,
+  type TabDropPosition,
+} from "./components/EditorTabs";
 import { FileTree } from "./components/FileTree";
 
 interface OpenFile {
@@ -117,6 +120,44 @@ function App() {
     }
   }
 
+  function handleReorder(
+    draggedPath: string,
+    targetPath: string,
+    position: TabDropPosition,
+  ) {
+    setOpenFiles((files) => {
+      const sourceIndex = files.findIndex((file) => file.path === draggedPath);
+      const targetIndex = files.findIndex((file) => file.path === targetPath);
+
+      if (
+        sourceIndex === -1 ||
+        targetIndex === -1 ||
+        sourceIndex === targetIndex
+      ) {
+        return files;
+      }
+
+      const reorderedFiles = [...files];
+      const [draggedFile] = reorderedFiles.splice(sourceIndex, 1);
+      const updatedTargetIndex = reorderedFiles.findIndex(
+        (file) => file.path === targetPath,
+      );
+      const insertionIndex =
+        position === "after" ? updatedTargetIndex + 1 : updatedTargetIndex;
+
+      reorderedFiles.splice(insertionIndex, 0, draggedFile);
+      const orderChanged = reorderedFiles.some(
+        (file, index) => file.path !== files[index]?.path,
+      );
+
+      if (!orderChanged) {
+        return files;
+      }
+
+      return reorderedFiles;
+    });
+  }
+
   return (
     <div
       className="flex flex-col h-screen bg-bg-primary text-text-primary font-sans"
@@ -145,6 +186,7 @@ function App() {
           activePath={activePath}
           onSelect={setActivePath}
           onClose={handleClose}
+          onReorder={handleReorder}
         />
       </Titlebar>
       <main className="flex flex-1 overflow-hidden">
